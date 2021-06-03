@@ -14,53 +14,35 @@ public class CrackMeUp : MonoBehaviour
 
     void Start()
     {
+        //cache mesh, and skinned mesh renderers
         meshRenderers = GetComponentsInChildren<MeshRenderer>();
         skinnedMeshRenderers = GetComponentsInChildren<SkinnedMeshRenderer>();
 
+        //create baked mesh from skinned mesh renderers
+        BakeMesh();
+
+        //Add Rayfire Components
+        CreateRayfireComponents();
+    }
+
+    private void BakeMesh()
+    {
         meshes = new Mesh[skinnedMeshRenderers.Length];
-        for(int i = 0;i < meshes.Length; i++)
+        for (int i = 0; i < meshes.Length; i++)
         {
             meshes[i] = new Mesh();
             skinnedMeshRenderers[i].BakeMesh(meshes[i]);
             skinnedMeshRenderers[i].gameObject.AddComponent(typeof(MeshFilter));
         }
-
-        initRayFire();
     }
 
-    // Update is called once per frame
-    void Update()
-    {
-        if (Input.GetMouseButtonDown(1))
-        {
-            HandleMeshRenderers();
-            HandleSkinnedMeshRenderers();
-        }
-    }
-
-    private void HandleSkinnedMeshRenderers()
-    {        
-        for (int i = 0; i < skinnedMeshRenderers.Length; i++)
-        {
-            SkinnedMeshRenderer skinnedMeshRenderer = skinnedMeshRenderers[i];
-        
-            GameObject skinnedMeshGO = skinnedMeshRenderer.gameObject;
-            skinnedMeshGO.GetComponent<MeshFilter>().mesh = meshes[i];
-
-            skinnedMeshRenderer.enabled = false;
-
-            skinnedMeshGO.GetComponent<RayfireRigid>().Demolish();
-        }
-    }
-
-    private void initRayFire()
+    private void CreateRayfireComponents()
     {
         foreach (MeshRenderer meshRenderer in meshRenderers)
         {
             GameObject meshGO = meshRenderer.gameObject;
             meshGO.AddComponent(typeof(RayfireRigid));
             meshGO.GetComponent<RayfireRigid>().meshDemolition.amount = demolitionAmount;
-            meshGO.GetComponent<RayfireRigid>().InitMeshFragments();
             meshGO.GetComponent<RayfireRigid>().physics.materialType = MaterialType.Glass;
         }
 
@@ -73,21 +55,44 @@ public class CrackMeUp : MonoBehaviour
                 skinnedMeshGO.AddComponent(typeof(RayfireRigid));
                 skinnedMeshGO.GetComponent<RayfireRigid>().meshDemolition.amount = demolitionAmount;
                 skinnedMeshGO.GetComponent<RayfireRigid>().Initialize();
-                skinnedMeshGO.GetComponent<RayfireRigid>().InitMeshFragments();
                 skinnedMeshGO.GetComponent<RayfireRigid>().physics.materialType = MaterialType.Glass;
             }
         }
 
     }
 
-    private void HandleMeshRenderers()
+    private void DemolishSkinnedMeshRenderers()
+    {
+        for (int i = 0; i < skinnedMeshRenderers.Length; i++)
+        {
+            SkinnedMeshRenderer skinnedMeshRenderer = skinnedMeshRenderers[i];
+
+            GameObject skinnedMeshGO = skinnedMeshRenderer.gameObject;
+            skinnedMeshGO.GetComponent<MeshFilter>().mesh = meshes[i];
+
+            skinnedMeshRenderer.enabled = false;
+
+            skinnedMeshGO.GetComponent<RayfireRigid>().Demolish();
+        }
+    }
+
+    private void DemolishMeshRenderers()
     {
         foreach (MeshRenderer meshRenderer in meshRenderers)
         {
             GameObject meshGO = meshRenderer.gameObject;
             meshGO.GetComponent<RayfireRigid>().Demolish();
-
         }
     }
+
+    void Update()
+    {
+        if (Input.GetMouseButtonDown(1))
+        {
+            DemolishMeshRenderers();
+            DemolishSkinnedMeshRenderers();
+        }
+    }
+
 }
 
